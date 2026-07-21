@@ -32,6 +32,21 @@ If you simply need a flat, sequential collection, stick with the standard contai
 
 ---
 
+## Drawbacks / Trade‑offs
+
+No container suits every use case, and IntrusiveForest has its own costs:
+
+- **Subtree size tracking (`size_tag`) cascades upward.**  
+  When you enable the `size_tag` trait (to keep per‑node subtree sizes), every insertion or removal must update the size counters of all ancestors up to the root. For deep trees this becomes **O(depth) per operation**, which can be significant if you mutate the structure often.
+
+- **Direct child count (`child_count_tag`) is cheap.**  
+  In contrast, keeping the number of immediate children requires updating only the parent node – no cascade. It is essentially free.
+
+- **Depth tag (`depth_tag`) doubles the iterator size.**  
+  Enabling per‑node depth tracking forces every iterator to carry a `pointer + depth` pair instead of a single pointer. This makes iterators twice as heavy and adds overhead in algorithms that maintain depth information during traversal.
+
+---
+
 ## Quick example
 
 ```cpp
