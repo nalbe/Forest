@@ -1,10 +1,16 @@
-```markdown
+
 # IntrusiveForest
 
-A **C++17 header-only** library providing an intrusive forest container – a generic tree structure that can own any number of independent root trees (a *forest*).  
-Unlike traditional tree implementations that allocate tree nodes separately, IntrusiveForest stores the linking pointers directly inside the user’s data types, through a configurable traits mechanism.
+A **C++17 header-only** library providing an intrusive forest container –
+    a generic tree structure that can own any number of independent root trees (a *forest*).  
+Unlike traditional tree implementations that allocate tree nodes separately,
+    IntrusiveForest stores the linking pointers directly inside the user’s data types,
+    through a configurable traits mechanism.
 
-It is a specialised container for hierarchical, non‑linear data where you want to manage node lifetimes yourself or minimise allocations when restructuring subtrees. It is also well suited for building complex hierarchies intended for subsequent processing with standard algorithms.
+It is a specialised container for hierarchical, non‑linear data where you want to
+    manage node lifetimes yourself or minimise allocations when restructuring subtrees.
+It is also well suited for building complex hierarchies intended for
+    subsequent processing with standard algorithms.
 
 ---
 
@@ -181,6 +187,7 @@ Then include `IntrusiveForest.hpp` and make sure to compile with C++17+ enabled 
 MIT
 
 ---
+
 
 ## Contributing
 
