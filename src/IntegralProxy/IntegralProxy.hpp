@@ -104,7 +104,7 @@ namespace cst
 	template <typename TValue>
 	void IntegralProxy<TValue, std::true_type>::reset() noexcept
 	{
-		m_value = 0;
+		m_value = {};
 	}
 
 
