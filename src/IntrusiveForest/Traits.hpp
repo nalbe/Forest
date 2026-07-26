@@ -23,7 +23,7 @@ namespace cst::detail::IntrusiveForest
 		using reference         = value_type&;
 		using const_reference   = const value_type&;
 
-		using size_tag          = std::true_type;
+		using size_tag          = std::false_type;
 		using child_count_tag   = std::false_type;
 		using depth_tag         = std::false_type;
 

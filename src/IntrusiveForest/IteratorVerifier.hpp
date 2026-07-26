@@ -22,7 +22,7 @@ namespace cst::detail::IntrusiveForest
 		// -- type aliases -------------------------------------------------------
 	private:
 		using self_type       = IteratorVerifier;
-		using container_type  = typename T;
+		using container_type  = std::remove_cv_t<T>;
 
 		// -- internals ----------------------------------------------------------
 	protected:
@@ -47,6 +47,8 @@ namespace cst::detail::IntrusiveForest
 		constexpr IteratorVerifier()                                            noexcept {}
 		constexpr IteratorVerifier(const self_type&)                            noexcept {}
 		constexpr IteratorVerifier(self_type&&)                                 noexcept {}
+		self_type& operator=(const self_type&)                                  noexcept { return *this; }
+		self_type& operator=(self_type&&)                                       noexcept { return *this; }
 
 	};  // class IteratorVerifier
 
@@ -127,7 +129,8 @@ namespace cst::detail::IntrusiveForest
 		{
 			auto ref = _get_node_ref();
 			_check_initialized();
-			assert(!(m_container->empty() && ref != m_container->end().base()) &&
+			assert(ref.valid() && "Attempted to insert at invalid position.");
+			assert(!(m_container->empty() && ref != m_container->end()._base()) &&
 				"Attempted to insert at invalid position.");
 		}
 
@@ -138,8 +141,8 @@ namespace cst::detail::IntrusiveForest
 			assert(!m_container->empty() && "Attempted to remove from empty container.");
 		}
 
-		template <typename... Bools>
-		void _check_conditions(Bools... conditions) const noexcept
+		template <typename... Bools
+		> void _check_conditions(Bools... conditions) const noexcept
 		{
 			auto ref = _get_node_ref();
 			assert(m_container != nullptr && "Iterator is not bound to a container!");
@@ -158,6 +161,18 @@ namespace cst::detail::IntrusiveForest
 		constexpr IteratorVerifier(self_type&& other) noexcept :
 			m_container(std::exchange(other.m_container, nullptr))
 		{}
+
+		self_type& operator=(const self_type& other) noexcept
+		{
+			m_container = other.m_container;
+			return *this;
+		}
+
+		self_type& operator=(self_type&& other) noexcept
+		{
+			m_container = std::exchange(other.m_container, nullptr);
+			return *this;
+		}
 
 	};  // class IteratorVerifier
 #endif

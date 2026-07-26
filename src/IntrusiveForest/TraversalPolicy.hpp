@@ -170,16 +170,14 @@ namespace cst::detail::IntrusiveForest
 	T TraversalPolicy::postorder_t::prev(T ref) noexcept
 	{
 		if (ref.is_sentinel()) {
-			return ref.self();  // -> last child
+			return ref.self();  // end -> last child
 		}
 		if (ref.has_children()) {
 			return ref.last();
 		}
-		for (; !ref.has_prev(); ref = ref.parent()) {
-			assert( !ref.is_root() and "Attempt to decrement begin()");
-		};
+		for (; !ref.has_prev(); ref = ref.parent());
 		return ref.prev();
-	}  // not applicable for empty container or reverse end sentinel
+	}  // not applicable for empty container or reverse end sentinel or begin
 
 	// forward node reference
 	template <typename T>

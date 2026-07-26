@@ -49,9 +49,7 @@ namespace cst::detail::IntrusiveForest
 		using mutable_node_pointer  = node_type*;
 		using const_node_pointer    = const node_type*;
 		using node_ref              = NodeRef<node_type>;
-		using const_node_ref        = NodeRef<const node_type>;
-		using node_ref_mixin        = DepthFieldMixin<node_ref, depth_tag>;
-		using const_node_ref_mixin  = DepthFieldMixin<const_node_ref, depth_tag>;
+		using node_ref_mixin        = DepthMixin<node_ref, depth_tag>;
 
 		// -- traverse policy aliases --------------------------------------------
 	public:
@@ -128,6 +126,9 @@ namespace cst::detail::IntrusiveForest
 		self_type& operator =(const_reference);
 		self_type& operator =(value_type&&);
 		self_type& operator =(std::initializer_list<value_type>);
+
+		// -- free operators -----------------------------------------------------
+	public:
 		template <typename T, typename V> friend bool operator ==(const Container<T, V>&, const Container<T, V>&);
 		template <typename T, typename V> friend bool operator !=(const Container<T, V>&, const Container<T, V>&);
 
@@ -138,56 +139,69 @@ namespace cst::detail::IntrusiveForest
 		bool      empty()                                          const noexcept;
 		template <typename TPolicy = preorder_t, typename TStream
 		> TStream& print(TStream&)                                 const;
+		template <typename U, bool C, typename TStream
+		> TStream& print(generic_iterator<U, C>, TStream&)         const;
 
-		// -- element insertion --------------------------------------------------
+		// -- insertion ----------------------------------------------------------
 	public:
-		template <typename U> policy_iterator<U> push_back(const_reference);
-		template <typename U> policy_iterator<U> push_back(value_type&&);
-		template <typename U> policy_iterator<U> insert(const_policy_iterator<U>, const_reference);
-		template <typename U> policy_iterator<U> insert(const_policy_iterator<U>, value_type&&);
-		template <typename U> policy_iterator<U> insert(const_policy_iterator<U>, std::initializer_list<value_type>);
-		template <typename U, typename... Args> policy_iterator<U> emplace(const_policy_iterator<U>, Args&&...);
+		template <typename U = preorder_t> policy_iterator<U> push_back(const_reference);
+		template <typename U = preorder_t> policy_iterator<U> push_back(value_type&&);
+		template <typename U, bool C> policy_iterator<U> insert(generic_iterator<U, C>, const_reference);
+		template <typename U, bool C> policy_iterator<U> insert(generic_iterator<U, C>, value_type&&);
+		template <typename U, bool C> policy_iterator<U> insert(generic_iterator<U, C>, std::initializer_list<value_type>);
+		template <typename U, bool C, typename... Args> policy_iterator<U> emplace(generic_iterator<U, C>, Args&&...);
 
 		// -- non-modifiers ------------------------------------------------------
 	public:
-		template <typename U> policy_iterator<U> copy_single(const_policy_iterator<U> where, const_policy_iterator<U>)  const;
-		template <typename U> policy_iterator<U> copy(const_policy_iterator<U> where, const_policy_iterator<U>)         const;
-		template <typename U, typename Pred = std::equal_to<>
-		> bool compare(const_policy_iterator<U>, const_policy_iterator<U>, Pred&& = {})                                 const noexcept
-			(noexcept(std::declval<Pred>()(std::declval<const T&>(), std::declval<const T&>())));
+		template <typename U1, bool C1, typename U2, bool C2
+		> policy_iterator<U2> copy_single(generic_iterator<U1, C1>, generic_iterator<U2, C2>)        const;
+		template <typename U1, bool C1, typename U2, bool C2
+		> policy_iterator<U2> copy(generic_iterator<U1, C1>, generic_iterator<U2, C2>)               const;
+		template <typename U1, bool C1, typename U2, bool C2, typename Pred = std::equal_to<>
+		> bool compare(generic_iterator<U1, C1>, generic_iterator<U2, C2>, Pred&& = {})              const noexcept
+			(std::is_nothrow_invocable_v<Pred, const_reference, const_reference>);
 
 		// -- modifiers ----------------------------------------------------------
 	public:
-		template <typename U> policy_iterator<U> join(const_policy_iterator<U>, self_type)                       noexcept;
-		template <typename U> policy_iterator<U> join(const_policy_iterator<U>, self_type&&)                     noexcept;
-		template <typename U> self_type unjoin(const_policy_iterator<U>)                                         noexcept;
-		template <typename U, bool С> void swap(const_policy_iterator<U>, const_policy_iterator<U>)              noexcept;
-		template <typename U> policy_iterator<U> remove(policy_iterator<U>)                                      noexcept;
-		template <typename U> size_type remove(policy_iterator<U>, const_reference)                              noexcept;
-		template <typename U> policy_iterator<U> move(const_policy_iterator<U> where, const_policy_iterator<U>)  noexcept;
-		template <typename U, typename Pred> size_type remove_if(const_policy_iterator<U>, Pred&&)
-			noexcept(noexcept(std::declval<Pred>()(std::declval<const T&>())));
+		template <typename U, bool C> policy_iterator<U> join(generic_iterator<U, C>, const self_type&)    noexcept;
+		template <typename U, bool C> policy_iterator<U> join(generic_iterator<U, C>, self_type&&)         noexcept;
+		template <typename U, bool C> self_type unjoin(generic_iterator<U, C>)                             noexcept;
+		template <typename U1, bool C1, typename U2, bool C2
+		> void swap(generic_iterator<U1, C1>, generic_iterator<U2, C2>)                                    noexcept;
+		template <typename U, bool C> policy_iterator<U> remove(generic_iterator<U, C>)                    noexcept;
+		size_type remove(const_reference)                                                                  noexcept;
+		template <typename U, bool C> size_type remove(generic_iterator<U, C>, const_reference)            noexcept;
+		template <typename U1, bool C1, typename U2, bool C2
+		> policy_iterator<U2> move(generic_iterator<U1, C1>, generic_iterator<U2, C2>)                     noexcept;
+		template <typename Pred> size_type remove_if(Pred&&)                                               noexcept
+			(std::is_nothrow_invocable_v<Pred, const_reference>);
+		template <typename U, bool C, typename Pred> size_type remove_if(generic_iterator<U, C>, Pred&&)   noexcept
+			(std::is_nothrow_invocable_v<Pred, const_reference>);
 
-		// -- constant iterators -----------------------------------------------
+		// -- const iterators ----------------------------------------------------
 	public:
 		template <typename U = preorder_t> const_policy_iterator<U> cend()              const noexcept;
 		template <typename U = preorder_t> const_policy_iterator<U> cbegin()            const noexcept;
 		template <typename U = preorder_t> const_policy_iterator<U> end()               const noexcept;
 		template <typename U = preorder_t> const_policy_iterator<U> begin()             const noexcept;
+		template <typename U = preorder_t> const_policy_iterator<U> first()             const noexcept;
+		template <typename U = preorder_t> const_policy_iterator<U> last()              const noexcept;
 
-		// -- mutable iterators ------------------------------------------------
+		// -- mutable iterators --------------------------------------------------
 	public:
 		template <typename U = preorder_t> policy_iterator<U> end()                           noexcept;
 		template <typename U = preorder_t> policy_iterator<U> begin()                         noexcept;
+		template <typename U = preorder_t> policy_iterator<U> first()                         noexcept;
+		template <typename U = preorder_t> policy_iterator<U> last()                          noexcept;
 
-		// -- constant reverse iterators ---------------------------------------
+		// -- const reverse iterators --------------------------------------------
 	public:
 		template <typename U = preorder_t> const_reverse_policy_iterator<U> crend()     const noexcept;
 		template <typename U = preorder_t> const_reverse_policy_iterator<U> crbegin()   const noexcept;
 		template <typename U = preorder_t> const_reverse_policy_iterator<U> rend()      const noexcept;
 		template <typename U = preorder_t> const_reverse_policy_iterator<U> rbegin()    const noexcept;
 
-		// -- mutable reverse iterators ----------------------------------------
+		// -- mutable reverse iterators ------------------------------------------
 	public:
 		template <typename U = preorder_t> reverse_policy_iterator<U> rbegin()                noexcept;
 		template <typename U = preorder_t> reverse_policy_iterator<U> rend()                  noexcept;
@@ -228,7 +242,7 @@ namespace cst::detail::IntrusiveForest
 	}
 
 
-	// -- public constructors -----------------------------------------------
+	/// -- public constructors ------------------------------------------------
 
 	// clears the entire tree
 	template <typename T, typename V>
@@ -296,7 +310,7 @@ namespace cst::detail::IntrusiveForest
 	}
 
 
-	// -- public operators ---------------------------------------------------
+	/// -- public operators ---------------------------------------------------
 
 	// clears the current container and transfers ownership from the other
 	template <typename T, typename V>
@@ -362,6 +376,9 @@ namespace cst::detail::IntrusiveForest
 		return *this;
 	}
 
+
+	/// -- free operators -----------------------------------------------------
+
 	// equality operator
 	template <typename T, typename V>
 	bool operator ==(const Container<T, V>& lhs, const Container<T, V>& rhs)
@@ -385,22 +402,26 @@ namespace cst::detail::IntrusiveForest
 	}
 
 
-	/// -- basic operations -------------------------------------------------
+	/// -- basic operations ---------------------------------------------------
 
 	// clears the entire container
 	template <typename T, typename V>
 	void Container<T, V>::clear() noexcept
 	{
-		if (!empty()) {
-			root().remove_subtree();
-		}
+		if (empty()) { return; }
+		root().remove_subtree();
 	}
 
 	// returns the total number of nodes in the container
 	template <typename T, typename V>
 	auto Container<T, V>::size() const noexcept -> size_type
 	{
-		return root().size() - 1;
+		if constexpr (size_tag::value) {
+			return root().size() - 1;
+		}
+		else {
+			return root().count_size();  // no -1
+		}
 	}
 
 	// checks if the container is empty
@@ -410,11 +431,20 @@ namespace cst::detail::IntrusiveForest
 		return !root().has_children();
 	}
 
+	// prints the container to the given stream
 	template <typename T, typename V>
 	template <typename U, typename TStream>
 	TStream& Container<T, V>::print(TStream& os) const
 	{
-		for (auto it = begin<U>(); it != end<U>(); ++it) {
+		return print(generic_iterator<U, true>{ root(), this }, os);
+	}
+
+	// prints the subtree to the given stream
+	template <typename T, typename V>
+	template <typename U, bool C, typename TStream>
+	TStream& Container<T, V>::print(generic_iterator<U, C> subtree, TStream& os) const
+	{
+		for (auto it = subtree.begin(); it != subtree.end(); ++it) {
 			const auto depth = it.depth();
 			if (depth > 0) {
 				for (size_type i{}; i + 1 < depth; ++i) {
@@ -434,9 +464,9 @@ namespace cst::detail::IntrusiveForest
 	}
 
 
-	/// -- element insertion ------------------------------------------------
+	/// -- insertion ----------------------------------------------------------
 
-	// inserts a single value by copy before the indicated position
+	// copies a single value to the end()
 	template <typename T, typename V>
 	template <typename U>
 	auto Container<T, V>::push_back(const_reference value) -> policy_iterator<U>
@@ -444,7 +474,7 @@ namespace cst::detail::IntrusiveForest
 		return insert<U>(end<U>(), value);
 	}
 
-	// inserts a single value by move before the indicated position
+	// moves a single value to the end()
 	template <typename T, typename V>
 	template <typename U>
 	auto Container<T, V>::push_back(value_type&& value) -> policy_iterator<U>
@@ -452,38 +482,38 @@ namespace cst::detail::IntrusiveForest
 		return insert<U>(end<U>(), std::move(value));
 	}
 
-	// inserts a single value by copy before the indicated position
+	// copies a single value before the indicated position
 	template <typename T, typename V>
-	template <typename U>
-	auto Container<T, V>::insert(const_policy_iterator<U> where, const_reference value) -> policy_iterator<U>
+	template <typename U, bool C>
+	auto Container<T, V>::insert(generic_iterator<U, C> where, const_reference value) -> policy_iterator<U>
 	{
 		where._check_belongs(this);
 		where._check_insert();
 		node_ref_mixin mixin{
 			node_ref{ new node_type(value) }.link( where._base() ),
-			where.depth()
+			where._base().depth()
 		};
 		return policy_iterator<U>(mixin, this);
 	}
 
-	// inserts a single value by move before the indicated position
+	// moves a single value before the indicated position
 	template <typename T, typename V>
-	template <typename U>
-	auto Container<T, V>::insert(const_policy_iterator<U> where, value_type&& value) -> policy_iterator<U>
+	template <typename U, bool C>
+	auto Container<T, V>::insert(generic_iterator<U, C> where, value_type&& value) -> policy_iterator<U>
 	{
 		where._check_belongs(this);
 		where._check_insert();
 		node_ref_mixin mixin{
 			node_ref{ new node_type(std::move(value)) }.link( where._base() ),
-			where.depth()
+			where._base().depth()
 		};
 		return policy_iterator<U>(mixin, this);
 	}
 
 	// inserts a range of values before the indicated position
 	template <typename T, typename V>
-	template <typename U>
-	auto Container<T, V>::insert(const_policy_iterator<U> where, std::initializer_list<value_type> init) -> policy_iterator<U>
+	template <typename U, bool C>
+	auto Container<T, V>::insert(generic_iterator<U, C> where, std::initializer_list<value_type> init) -> policy_iterator<U>
 	{
 		where._check_belongs(this);
 		where._check_insert();
@@ -494,65 +524,67 @@ namespace cst::detail::IntrusiveForest
 		for (auto it{ std::rbegin(init) }; it != std::rend(init); ++it) {
 			ref = node_ref{ new node_type(*it) }.link(ref);
 		}
-		node_ref_mixin mixin{ ref, where.depth() };
+		node_ref_mixin mixin{
+			ref,
+			where._base().depth()
+		};
 		return policy_iterator<U>(mixin, this);
 	}
 
 	// constructs an element in place before the indicated position
 	template <typename T, typename V>
-	template <typename U, typename... Args>
-	auto Container<T, V>::emplace(const_policy_iterator<U> where, Args&&... args) -> policy_iterator<U>
+	template <typename U, bool C, typename... Args>
+	auto Container<T, V>::emplace(generic_iterator<U, C> where, Args&&... args) -> policy_iterator<U>
 	{
 		where._check_belongs(this);
 		where._check_insert();
 		node_ref_mixin mixin{
 			node_ref{ new node_type(std::forward<Args>(args)...) }.link(where._base()),
-			where.depth()
+			where._base().depth()
 		};
 		return policy_iterator<U>(mixin, this);
 	}
 
 
-	/// -- non-modifiers ----------------------------------------------------
+	/// -- non-modifiers ------------------------------------------------------
 
 	// copy a single node and insert before the indicated position
 	template <typename T, typename V>
-	template <typename U>
-	auto Container<T, V>::copy_single(const_policy_iterator<U> where, const_policy_iterator<U> it) const -> policy_iterator<U>
+	template <typename U1, bool C1, typename U2, bool C2>
+	auto Container<T, V>::copy_single(generic_iterator<U1, C1> where, generic_iterator<U2, C2> it) const -> policy_iterator<U2>
 	{
 		where._check_belongs(this);
 		where._check_insert();
 		it._check_dereference();
 		node_ref_mixin mixin{
 			it._base().copy_single().link( where._base() ),
-			where.depth()
+			where._base().depth()
 		};
-		return policy_iterator<U>(mixin, this);
+		return policy_iterator<U2>(mixin, this);
 	}
 
 	// deep copy a single node and insert it before the indicating position
 	template <typename T, typename V>
-	template <typename U>
-	auto Container<T, V>::copy(const_policy_iterator<U> where, const_policy_iterator<U> it) const -> policy_iterator<U>
+	template <typename U1, bool C1, typename U2, bool C2>
+	auto Container<T, V>::copy(generic_iterator<U1, C1> where, generic_iterator<U2, C2> it) const -> policy_iterator<U2>
 	{
 		where._check_belongs(this);
 		where._check_insert();
 		it._check_dereference();
 		node_ref_mixin mixin{
 			it._base().copy().link( where._base() ),
-			where.depth()
+			where._base().depth()
 		};
-		return policy_iterator<U>(mixin, this);
+		return policy_iterator<U2>(mixin, this);
 	}
 
 	// compares two nodes (and their respective subtrees)
 	template <typename T, typename V>
-	template <typename U, typename Pred>
-	bool Container<T, V>::compare(const_policy_iterator<U> first, const_policy_iterator<U> second, Pred&& equal)
-		const noexcept(noexcept(std::declval<Pred>()(std::declval<const T&>(), std::declval<const T&>())))
+	template <typename U1, bool C1, typename U2, bool C2, typename Pred>
+	bool Container<T, V>::compare(generic_iterator<U1, C1> first, generic_iterator<U2, C2> second, Pred&& equal) const noexcept
+		(std::is_nothrow_invocable_v<Pred, const_reference, const_reference>)
 	{
 		first._check_belongs(this);
-		first._check_compatible(second);
 		first._check_dereference();
 		second._check_dereference();
 		return first._base()
@@ -560,20 +592,20 @@ namespace cst::detail::IntrusiveForest
 	}
 
 
-	/// -- modifiers --------------------------------------------------------
+	/// -- modifiers ----------------------------------------------------------
 	
 	// join-copy the contents of other container into this
 	template <typename T, typename V>
-	template <typename U>
-	auto Container<T, V>::join(const_policy_iterator<U> where, self_type other) noexcept -> policy_iterator<U>
+	template <typename U, bool C>
+	auto Container<T, V>::join(generic_iterator<U, C> where, const self_type& other) noexcept -> policy_iterator<U>
 	{
-		return join( where, std::move(other) );
+		return join( where, self_type(other) );
 	}
 
 	// join-move the contents of other container into this
 	template <typename T, typename V>
-	template <typename U>
-	auto Container<T, V>::join(const_policy_iterator<U> where, self_type&& other) noexcept -> policy_iterator<U>
+	template <typename U, bool C>
+	auto Container<T, V>::join(generic_iterator<U, C> where, self_type&& other) noexcept -> policy_iterator<U>
 	{
 		where._check_belongs(this);
 		where._check_insert();
@@ -585,15 +617,15 @@ namespace cst::detail::IntrusiveForest
 		}
 		node_ref_mixin mixin{
 			other.root().move_subtree( where._base() ),
-			where.depth()
+			where._base().depth()
 		};
 		return policy_iterator<U>(mixin, this);
 	}
 
 	// unjoins the subtree rooted at the indicated node
 	template <typename T, typename V>
-	template <typename U>
-	auto Container<T, V>::unjoin(const_policy_iterator<U> it) noexcept -> self_type
+	template <typename U, bool C>
+	auto Container<T, V>::unjoin(generic_iterator<U, C> it) noexcept -> self_type
 	{
 		it._check_belongs(this);
 		it._check_remove();
@@ -604,8 +636,8 @@ namespace cst::detail::IntrusiveForest
 
 	// swaps the contents of two containers
 	template <typename T, typename V>
-	template <typename U, bool С>
-	void Container<T, V>::swap(const_policy_iterator<U> first, const_policy_iterator<U> second) noexcept
+	template <typename U1, bool C1, typename U2, bool C2>
+	void Container<T, V>::swap(generic_iterator<U1, C1> first, generic_iterator<U2, C2> second) noexcept
 	{
 		first._check_belongs(this);
 		first._check_compatible(second);
@@ -616,22 +648,33 @@ namespace cst::detail::IntrusiveForest
 
 	// removes the indicated node
 	template <typename T, typename V>
-	template <typename U>
-	auto Container<T, V>::remove(policy_iterator<U> it) noexcept -> policy_iterator<U>
+	template <typename U, bool C>
+	auto Container<T, V>::remove(generic_iterator<U, C> it) noexcept -> policy_iterator<U>
 	{
 		it._check_belongs(this);
 		it._check_remove();
 		node_ref_mixin mixin{
 			it._base().remove(),
-			it.depth()
+			it._base().depth()
 		};
 		return policy_iterator<U>(mixin, this);
 	}
 
-	// removes elements from the container based on a value
+	// removes all elements equal to value from the container
 	template <typename T, typename V>
-	template <typename U>
-	auto Container<T, V>::remove(policy_iterator<U> it, const_reference value) noexcept -> size_type
+	auto Container<T, V>::remove(const_reference value) noexcept -> size_type
+	{
+		return root().remove_if(
+			[&value](const_reference stored_value) {
+				return value == stored_value;
+			}
+		);
+	}
+
+	// removes all elements equal to value from the subtree rooted at iterator
+	template <typename T, typename V>
+	template <typename U, bool C>
+	auto Container<T, V>::remove(generic_iterator<U, C> it, const_reference value) noexcept -> size_type
 	{
 		it._check_belongs(this);
 		it._check_remove();
@@ -644,9 +687,20 @@ namespace cst::detail::IntrusiveForest
 
 	// remove elements from the container based on provided predicate
 	template <typename T, typename V>
-	template <typename U, typename Pred>
-	auto Container<T, V>::remove_if(const_policy_iterator<U> it, Pred&& pred)
-		noexcept(noexcept(std::declval<Pred>()(std::declval<const T&>()))) -> size_type
+	template <typename Pred>
+	auto Container<T, V>::remove_if(Pred&& pred) noexcept
+		(std::is_nothrow_invocable_v<Pred, const_reference>) -> size_type
+	{
+		return root().remove_if(
+			std::forward<Pred>(pred)
+		);
+	}
+
+	// remove elements from the subtree based on provided predicate
+	template <typename T, typename V>
+	template <typename U, bool C, typename Pred>
+	auto Container<T, V>::remove_if(generic_iterator<U, C> it, Pred&& pred) noexcept
+		(std::is_nothrow_invocable_v<Pred, const_reference>) -> size_type
 	{
 		it._check_belongs(this);
 		it._check_remove();
@@ -657,39 +711,39 @@ namespace cst::detail::IntrusiveForest
 
 	// moves a single node to a new position within the containers of same type
 	template <typename T, typename V>
-	template <typename U>
-	auto Container<T, V>::move(const_policy_iterator<U> where, const_policy_iterator<U> it) noexcept -> policy_iterator<U>
+	template <typename U1, bool C1, typename U2, bool C2>
+	auto Container<T, V>::move(generic_iterator<U1, C1> where, generic_iterator<U2, C2> it) noexcept -> policy_iterator<U2>
 	{
 		where._check_belongs(this);
 		where._check_insert();
 		it._check_dereference();
 		node_ref_mixin mixin{
 			it._base().move( where._base() ),
-			where.depth()
+			where._base().depth()
 		};
-		return policy_iterator<U>(mixin, this);
+		return policy_iterator<U2>(mixin, this);
 	}
 
 
-	/// -- constant iterators -----------------------------------------------
+	/// -- const iterators ----------------------------------------------------
 
-	// returns a constant iterator to the end sentinel for traversal order
+	// returns const iterator to the end sentinel
 	template <typename T, typename V>
 	template <typename U>
 	auto Container<T, V>::cend() const noexcept -> const_policy_iterator<U>
 	{
-		return const_policy_iterator<U>{ U::end( root() ), this };
+		return const_policy_iterator<U>{ root<U>().end(), this };
 	}
 
-	// returns a constant iterator to the first element in the given traversal order
+	// returns const iterator to the begin node
 	template <typename T, typename V>
 	template <typename U>
 	auto Container<T, V>::cbegin() const noexcept -> const_policy_iterator<U>
 	{
-		return const_policy_iterator<U>{ U::begin( root() ), this };
+		return const_policy_iterator<U>{ root<U>().begin(), this };
 	}
 
-	// returns a constant iterator to the end sentinel
+	// returns const iterator to the end sentinel
 	template <typename T, typename V>
 	template <typename U>
 	auto Container<T, V>::end() const noexcept -> const_policy_iterator<U>
@@ -697,7 +751,7 @@ namespace cst::detail::IntrusiveForest
 		return cend<U>();
 	}
 
-	// returns a constant iterator to the first element
+	// returns const iterator to the begin node
 	template <typename T, typename V>
 	template <typename U>
 	auto Container<T, V>::begin() const noexcept -> const_policy_iterator<U>
@@ -705,10 +759,26 @@ namespace cst::detail::IntrusiveForest
 		return cbegin<U>();
 	}
 
+	// returns const iterator to the first child node
+	template <typename T, typename V>
+	template <typename U>
+	auto Container<T, V>::first() const noexcept -> const_policy_iterator<U>
+	{
+		return const_policy_iterator<U>{ root().first(), this };
+	}
 
-	/// -- mutable iterators ------------------------------------------------
+	// returns const iterator to the last child node
+	template <typename T, typename V>
+	template <typename U>
+	auto Container<T, V>::last() const noexcept -> const_policy_iterator<U>
+	{
+		return const_policy_iterator<U>{ root().last(), this };
+	}
 
-	// returns a mutable iterator to the end sentinel
+
+	/// -- mutable iterators --------------------------------------------------
+
+	// returns mutable iterator to the end sentinel
 	template <typename T, typename V>
 	template <typename U>
 	auto Container<T, V>::end() noexcept -> policy_iterator<U>
@@ -718,7 +788,7 @@ namespace cst::detail::IntrusiveForest
 		};
 	}
 
-	// returns a mutable iterator to the first element
+	// returns mutable iterator to the begin node
 	template <typename T, typename V>
 	template <typename U>
 	auto Container<T, V>::begin() noexcept -> policy_iterator<U>
@@ -728,10 +798,30 @@ namespace cst::detail::IntrusiveForest
 		};
 	}
 
+	// returns mutable iterator to the first child node
+	template <typename T, typename V>
+	template <typename U>
+	auto Container<T, V>::first() noexcept -> policy_iterator<U>
+	{
+		return policy_iterator<U>{ 
+			static_cast<const self_type*>(this)->first<U>()
+		};
+	}
 
-	/// -- constant reverse iterators ---------------------------------------
+	// returns mutable iterator to the last child node
+	template <typename T, typename V>
+	template <typename U>
+	auto Container<T, V>::last() noexcept -> policy_iterator<U>
+	{
+		return policy_iterator<U>{
+			static_cast<const self_type*>(this)->last<U>()
+		};
+	}
 
-	// returns a constant reverse iterator to the end sentinel of the reversed traversal
+
+	/// -- const reverse iterators --------------------------------------------
+
+	// returns a const reverse iterator to the end sentinel of the reversed traversal
 	template <typename T, typename V>
 	template <typename U>
 	auto Container<T, V>::crend() const noexcept -> const_reverse_policy_iterator<U>
@@ -739,7 +829,7 @@ namespace cst::detail::IntrusiveForest
 		return const_reverse_policy_iterator<U>{ cbegin<U>() };
 	}
 
-	// returns a constant reverse iterator to the first element of the reversed traversal
+	// returns a const reverse iterator to the first element of the reversed traversal
 	template <typename T, typename V>
 	template <typename U>
 	auto Container<T, V>::crbegin() const noexcept -> const_reverse_policy_iterator<U>
@@ -747,7 +837,7 @@ namespace cst::detail::IntrusiveForest
 		return const_reverse_policy_iterator<U>{ cend<U>() };
 	}
 
-	// returns a constant reverse iterator to the reversed end
+	// returns a const reverse iterator to the reversed end
 	template <typename T, typename V>
 	template <typename U>
 	auto Container<T, V>::rend() const noexcept -> const_reverse_policy_iterator<U>
@@ -755,7 +845,7 @@ namespace cst::detail::IntrusiveForest
 		return const_reverse_policy_iterator<U>{ begin<U>() };
 	}
 
-	// returns a constant reverse iterator to the reversed beginning
+	// returns a const reverse iterator to the reversed beginning
 	template <typename T, typename V>
 	template <typename U>
 	auto Container<T, V>::rbegin() const noexcept -> const_reverse_policy_iterator<U>
@@ -764,7 +854,7 @@ namespace cst::detail::IntrusiveForest
 	}
 
 
-	/// -- mutable reverse iterators ----------------------------------------
+	/// -- mutable reverse iterators ------------------------------------------
 
 	// returns a mutable reverse iterator to the first element of the reversed travers
 	template <typename T, typename V>

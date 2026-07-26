@@ -64,43 +64,43 @@ namespace cst::detail::IntrusiveForest
 
 		// -- base setters -------------------------------------------------------
 	protected:
-		self_type& set_end(self_type)                                   noexcept;
-		self_type& set_rend(self_type)                                  noexcept;
+		self_type& set_end   (self_type)                                noexcept;
+		self_type& set_rend  (self_type)                                noexcept;
 		self_type& set_parent(self_type)                                noexcept;
-		self_type& set_prev(self_type)                                  noexcept;
-		self_type& set_next(self_type)                                  noexcept;
+		self_type& set_prev  (self_type)                                noexcept;
+		self_type& set_next  (self_type)                                noexcept;
 
 		// -- base accessors -----------------------------------------------------
 	protected:
-		[[nodiscard]] self_type self()                            const noexcept;
-		[[nodiscard]] self_type end()                             const noexcept;
-		[[nodiscard]] self_type rend()                            const noexcept;
+		[[nodiscard]] self_type self  ()                          const noexcept;
+		[[nodiscard]] self_type end   ()                          const noexcept;
+		[[nodiscard]] self_type rend  ()                          const noexcept;
 		[[nodiscard]] self_type parent()                          const noexcept;
-		[[nodiscard]] self_type first()                           const noexcept;
-		[[nodiscard]] self_type last()                            const noexcept;
-		[[nodiscard]] self_type prev()                            const noexcept;
-		[[nodiscard]] self_type next()                            const noexcept;
-		[[nodiscard]] self_type leftmost_deepest()                const noexcept;
+		[[nodiscard]] self_type first ()                          const noexcept;
+		[[nodiscard]] self_type last  ()                          const noexcept;
+		[[nodiscard]] self_type prev  ()                          const noexcept;
+		[[nodiscard]] self_type next  ()                          const noexcept;
+		[[nodiscard]] self_type leftmost_deepest ()               const noexcept;
 		[[nodiscard]] self_type rightmost_deepest()               const noexcept;
 
 		// -- common traverse algorithms -----------------------------------------
 	protected:
 		template <typename TPolicy, typename Op
 		> static bool for_each(self_type, self_type, Op&&)
-			noexcept(noexcept(std::declval<Op&>()(std::declval<self_type&>())));
+			noexcept(std::is_nothrow_invocable_v<Op, self_type&>);
 		template <typename TPolicy, typename Op
 		> static bool for_each(self_type, self_type, self_type, self_type, Op&&)
-			noexcept(noexcept(std::declval<Op&>()(std::declval<self_type&>(), std::declval<self_type&>())));
+			noexcept(std::is_nothrow_invocable_v<Op, self_type&, self_type&>);
 		template <typename TPolicy, typename Op
 		> static bool for_each_reverse(self_type, self_type, Op&&)
-			noexcept(noexcept(std::declval<Op&>()(std::declval<self_type&>())));
+			noexcept(std::is_nothrow_invocable_v<Op, self_type&>);
 		template <typename TPolicy, typename Op
 		> static bool for_each_reverse(self_type, self_type, self_type, self_type, Op&&)
-			noexcept(noexcept(std::declval<Op&>()(std::declval<self_type&>(), std::declval<self_type&>())));
+			noexcept(std::is_nothrow_invocable_v<Op, self_type&, self_type&>);
 
 		// -- access data --------------------------------------------------------
 	public:
-		[[nodiscard]] reference       data()                      const noexcept;
+		[[nodiscard]] reference       data ()                     const noexcept;
 		[[nodiscard]] const_reference cdata()                     const noexcept;
 
 		// -- cached counters (optional) -----------------------------------------
@@ -111,38 +111,38 @@ namespace cst::detail::IntrusiveForest
 		// -- iterative counters -------------------------------------------------
 	public:
 		[[nodiscard]] size_type count_depth()                     const noexcept;
-		[[nodiscard]] size_type count_size()                      const noexcept;
+		[[nodiscard]] size_type count_size ()                     const noexcept;
 		[[nodiscard]] size_type count_children()                  const noexcept;
 
 		// -- node checks --------------------------------------------------------
 	public:
-		[[nodiscard]] bool valid()                                const noexcept;
-		[[nodiscard]] bool invalid()                              const noexcept;
-		[[nodiscard]] bool is_root()                              const noexcept;
-		[[nodiscard]] bool is_top()                               const noexcept;
-		[[nodiscard]] bool is_real()                              const noexcept;
-		[[nodiscard]] bool is_begin()                             const noexcept;
+		[[nodiscard]] bool valid    ()                            const noexcept;
+		[[nodiscard]] bool invalid  ()                            const noexcept;
+		[[nodiscard]] bool is_root  ()                            const noexcept;
+		[[nodiscard]] bool is_top   ()                            const noexcept;
+		[[nodiscard]] bool is_real  ()                            const noexcept;
+		[[nodiscard]] bool is_begin ()                            const noexcept;
 		[[nodiscard]] bool is_rbegin()                            const noexcept;
-		[[nodiscard]] bool has_prev()                             const noexcept;
-		[[nodiscard]] bool has_next()                             const noexcept;
+		[[nodiscard]] bool has_prev ()                            const noexcept;
+		[[nodiscard]] bool has_next ()                            const noexcept;
 		[[nodiscard]] bool has_children()                         const noexcept;
 		template <typename Pred
-		> bool [[nodiscard]] is_equal(self_type, Pred&&)
-			const noexcept(noexcept(std::declval<Pred>()(std::declval<const value_type&>(), std::declval<const value_type&>())));
+		> bool [[nodiscard]] is_equal(self_type, Pred&&)          const noexcept
+			(std::is_nothrow_invocable_v<Pred, const value_type&, const value_type&>);
 		template <typename Pred
-		> bool [[nodiscard]] is_subtree_equal(self_type, Pred&&)
-			const noexcept(noexcept(std::declval<Pred>()(std::declval<const value_type&>(), std::declval<const value_type&>())));
+		> bool [[nodiscard]] is_subtree_equal(self_type, Pred&&)  const noexcept
+			(std::is_nothrow_invocable_v<Pred, const value_type&, const value_type&>);
 
 		// -- sentinel checks ----------------------------------------------------
 	public:
 		[[nodiscard]] bool is_sentinel()                          const noexcept;
-		[[nodiscard]] bool is_end_of_empty_subtree()              const noexcept;
+		[[nodiscard]] bool is_end_of_empty_subtree ()             const noexcept;
 		[[nodiscard]] bool is_rend_of_empty_subtree()             const noexcept;
 		[[nodiscard]] bool is_sentinel_of_empty_subtree()         const noexcept;
-		[[nodiscard]] bool is_end_of_non_empty_subtree()          const noexcept;
+		[[nodiscard]] bool is_end_of_non_empty_subtree ()         const noexcept;
 		[[nodiscard]] bool is_rend_of_non_empty_subtree()         const noexcept;
 		[[nodiscard]] bool is_sentinel_of_non_empty_subtree()     const noexcept;
-		[[nodiscard]] bool is_end()                               const noexcept;
+		[[nodiscard]] bool is_end ()                              const noexcept;
 		[[nodiscard]] bool is_rend()                              const noexcept;
 
 		// -- non-modifiers ------------------------------------------------------
@@ -155,12 +155,12 @@ namespace cst::detail::IntrusiveForest
 	public:
 		self_type  remove()                                             noexcept;
 		self_type& remove_subtree()                                     noexcept;
-		self_type& move(self_type)                                      noexcept;
+		self_type& move        (self_type)                              noexcept;
 		self_type& move_subtree(self_type)                              noexcept;
-		void       swap(self_type)                                      noexcept;
+		void       swap        (self_type)                              noexcept;
 		template <typename Pred
 		> size_type remove_if(Pred&&)                                   noexcept
-			(noexcept(std::declval<Pred>()(std::declval<const value_type&>())));
+			(std::is_nothrow_invocable_v<Pred, const value_type&>);
 
 		// -- linkage ------------------------------------------------------------
 	public:
@@ -169,13 +169,13 @@ namespace cst::detail::IntrusiveForest
 
 		// -- helpers ------------------------------------------------------------
 	private:
-		self_type& unlink_impl()                                        noexcept;
-		self_type& link_impl(self_type)                                 noexcept;
-		self_type& bind_as_prev(self_type)                              noexcept;
-		self_type& bind_as_next(self_type)                              noexcept;
+		self_type& unlink_impl ()                                       noexcept;
+		self_type& link_impl   (self_type)                              noexcept;
+		self_type& bind_prev(self_type)                              noexcept;
+		self_type& bind_next(self_type)                              noexcept;
 		self_type  parent_for_linkage()                           const noexcept;
-		self_type  prev_for_linkage()                             const noexcept;
-		self_type  next_for_linkage()                             const noexcept;
+		self_type  prev_for_linkage  ()                           const noexcept;
+		self_type  next_for_linkage  ()                           const noexcept;
 		template <typename Op
 		> self_type& update_sizes_upwards(size_type, Op&&)              noexcept;
 
@@ -195,7 +195,7 @@ namespace cst::detail::IntrusiveForest
 		self_type& operator=(mutable_node_pointer)                      noexcept;
 		self_type& operator=(std::nullptr_t)                            noexcept;
 
-		explicit operator mutable_node_handle()                   const noexcept;
+		explicit operator mutable_node_handle ()                  const noexcept;
 		explicit operator mutable_node_pointer()                  const noexcept;
 
 		// -- private constructors -----------------------------------------------
@@ -348,8 +348,8 @@ namespace cst::detail::IntrusiveForest
 	// traverses a range of nodes, applying a operation
 	template <typename T>
 	template <typename U, typename Op>
-	bool NodeRef<T>::for_each(self_type ref, self_type ref_end, Op&& op)
-		noexcept(noexcept(std::declval<Op&>()(std::declval<self_type&>())))
+	bool NodeRef<T>::for_each(self_type ref, self_type ref_end, Op&& op) noexcept
+		(std::is_nothrow_invocable_v<Op, self_type&>)
 	{
 		while (ref != ref_end) {
 			if (!op(ref)) {
@@ -363,8 +363,8 @@ namespace cst::detail::IntrusiveForest
 	// traverses two ranges of nodes in parallel, applying a binary operation
 	template <typename T>
 	template <typename U, typename Op>
-	bool NodeRef<T>::for_each(self_type lhs, self_type lhs_end, self_type rhs, self_type rhs_end, Op&& op)
-		noexcept(noexcept(std::declval<Op&>()(std::declval<self_type&>(), std::declval<self_type&>())))
+	bool NodeRef<T>::for_each(self_type lhs, self_type lhs_end, self_type rhs, self_type rhs_end, Op&& op) noexcept
+		(std::is_nothrow_invocable_v<Op, self_type&, self_type&>)
 	{
 		while (lhs != lhs_end and rhs != rhs_end) {
 			if (!op(lhs, rhs)) {
@@ -379,8 +379,8 @@ namespace cst::detail::IntrusiveForest
 	// reverse-preorder traversal of subtree in lockstep, capturing node and applying operation one step behind
 	template <typename T>
 	template <typename U, typename Op>
-	bool NodeRef<T>::for_each_reverse(self_type ref_end, self_type ref, Op&& op)
-		noexcept(noexcept(std::declval<Op&>()(std::declval<self_type&>())))
+	bool NodeRef<T>::for_each_reverse(self_type ref_end, self_type ref, Op&& op) noexcept
+		(std::is_nothrow_invocable_v<Op, self_type&>)
 	{
 		ref = U::prev(ref);
 		while (ref != ref_end) {
@@ -396,8 +396,8 @@ namespace cst::detail::IntrusiveForest
 	// reverse-preorder traversal of two subtrees in lockstep, capturing nodes and applying binary operation one step behind
 	template <typename T>
 	template <typename U, typename Op>
-	bool NodeRef<T>::for_each_reverse(self_type lhs_end, self_type lhs, self_type rhs_end, self_type rhs, Op&& op)
-		noexcept(noexcept(std::declval<Op&>()(std::declval<self_type&>(), std::declval<self_type&>())))
+	bool NodeRef<T>::for_each_reverse(self_type lhs_end, self_type lhs, self_type rhs_end, self_type rhs, Op&& op) noexcept
+		(std::is_nothrow_invocable_v<Op, self_type&, self_type&>)
 	{
 		lhs = U::prev(lhs);
 		rhs = U::prev(rhs);
@@ -595,12 +595,12 @@ namespace cst::detail::IntrusiveForest
 	// compare pair of nodes
 	template <typename T>
 	template <typename Pred>
-	bool NodeRef<T>::is_equal(self_type other, Pred&& pred)
-		const noexcept(noexcept(std::declval<Pred>()(std::declval<const value_type&>(), std::declval<const value_type&>())))
+	bool NodeRef<T>::is_equal(self_type other, Pred&& pred) const noexcept
+		(std::is_nothrow_invocable_v<Pred, const value_type&, const value_type&>)
 	{
 		assert(is_real());
 		assert(other.is_real());
-		if (this == other) {
+		if (this == &other) {
 			return true;
 		}
 		return for_each<preorder_t>(
@@ -617,12 +617,12 @@ namespace cst::detail::IntrusiveForest
 	// compare sub-trees
 	template <typename T>
 	template <typename Pred>
-	bool NodeRef<T>::is_subtree_equal(self_type other, Pred&& pred)
-		const noexcept(noexcept(std::declval<Pred>()(std::declval<const value_type&>(), std::declval<const value_type&>())))
+	bool NodeRef<T>::is_subtree_equal(self_type other, Pred&& pred) const noexcept
+		(std::is_nothrow_invocable_v<Pred, const value_type&, const value_type&>)
 	{
 		assert(is_real());
 		assert(other.is_real());
-		if (this == other) {
+		if (this == &other) {
 			return true;
 		}
 		return for_each<preorder_t>(
@@ -768,7 +768,7 @@ namespace cst::detail::IntrusiveForest
 		self_type following = next();
 		unlink();
 		bool result = for_each_reverse<preorder_t>(
-			*this, end(),  // should begins at self, stops at end
+			*this, end(),  // should begin at self, stop at end
 			[](self_type ref) {
 				delete *ref.m_handle;
 				return true;
@@ -791,6 +791,9 @@ namespace cst::detail::IntrusiveForest
 		);
 		assert(result);
 		update_sizes_upwards( size() - 1, std::minus<>{} );
+		child_count().reset();
+		set_end (*this);
+		set_rend(*this);
 		return *this;
 	}
 
@@ -828,8 +831,8 @@ namespace cst::detail::IntrusiveForest
 			});
 		first().set_prev( new_left );
 		last().set_next( new_right );
-		new_left.bind_as_next( first() );
-		new_right.bind_as_prev( last() );
+		new_left.bind_next( first() );
+		new_right.bind_prev( last() );
 		new_parent.child_count() = child_count();
 		new_parent.update_sizes_upwards( size() - 1, std::plus<>{} );
 		update_sizes_upwards( size() - 1, std::minus<>{} );
@@ -864,8 +867,8 @@ namespace cst::detail::IntrusiveForest
 	// removes all nodes for which predicate returns true
 	template <typename T>
 	template <typename Pred>
-	auto NodeRef<T>::remove_if(Pred&& pred)
-		noexcept(noexcept(std::declval<Pred>()(std::declval<const value_type&>())))	-> size_type
+	auto NodeRef<T>::remove_if(Pred&& pred) noexcept
+		(std::is_nothrow_invocable_v<Pred, const value_type&>) -> size_type
 	{
 		assert(is_real());
 		size_type cnt{};
@@ -918,8 +921,8 @@ namespace cst::detail::IntrusiveForest
 	auto NodeRef<T>::unlink_impl() noexcept -> self_type&
 	{
 		--parent().child_count();
-		prev_for_linkage().bind_as_next( next_for_linkage() );
-		next_for_linkage().bind_as_prev( prev_for_linkage() );
+		prev_for_linkage().bind_next( next_for_linkage() );
+		next_for_linkage().bind_prev( prev_for_linkage() );
 		return *this;
 	}
 
@@ -928,11 +931,11 @@ namespace cst::detail::IntrusiveForest
 	auto NodeRef<T>::link_impl(self_type where) noexcept -> self_type&
 	{
 		set_parent( where.parent_for_linkage() );
-		set_prev( where.prev_for_linkage() );
-		set_next( where );
+		set_prev  ( where.prev_for_linkage() );
+		set_next  ( where );
 
-		prev().bind_as_next( self() );
-		where.bind_as_prev( self() );
+		prev().bind_next( self() );
+		where .bind_prev( self() );
 
 		++parent().child_count();
 		return *this;
@@ -940,7 +943,7 @@ namespace cst::detail::IntrusiveForest
 
 	// set previous-sibling node reference
 	template <typename T>
-	auto NodeRef<T>::bind_as_prev(self_type ref) noexcept -> self_type&
+	auto NodeRef<T>::bind_prev(self_type ref) noexcept -> self_type&
 	{
 		if (is_real()) {
 			return set_prev(ref);
@@ -952,7 +955,7 @@ namespace cst::detail::IntrusiveForest
 
 	// set next-sibling node reference
 	template <typename T>
-	auto NodeRef<T>::bind_as_next(self_type ref) noexcept -> self_type&
+	auto NodeRef<T>::bind_next(self_type ref) noexcept -> self_type&
 	{
 		if (is_real()) {
 			return set_next(ref);

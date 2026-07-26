@@ -1,4 +1,4 @@
-﻿// DepthFieldMixin.hpp
+﻿// DepthMixin.hpp
 #pragma once
 
 // Implementation-specific headers
@@ -9,115 +9,212 @@
 
 
 
+/// DepthMixin
 namespace cst::detail::IntrusiveForest
 {
 
 	// =======================================================================
-	//  DepthFieldMixin - inherits TNodeRef, overrides movement methods, stores depth
+	//  DepthMixin - inherits TNodeRef, overrides movement methods, stores depth
 	// =======================================================================
 	template <typename TNodeRef, typename TBool>
-    class DepthFieldMixin;
+	class DepthMixin;
+
+}  // namespace cst::detail::IntrusiveForest
 
 
+
+/// DepthMixin<T, std::true_type>
+namespace cst::detail::IntrusiveForest
+{
 
 	// =======================================================================
-	//  DepthFieldMixin<T, std::true_type> - actual implementation
+	//  DepthMixin<T, std::true_type> - actual implementation
 	// =======================================================================
 	template <typename TNodeRef>
-    class DepthFieldMixin<TNodeRef, std::true_type> :
+	class DepthMixin<TNodeRef, std::true_type> :
+		public TNodeRef
+	{
+		// -- type aliases -------------------------------------------------------
+	public:
+		using base_type = TNodeRef;
+		using typename base_type::size_type;
+
+		// -- members ------------------------------------------------------------
+	private:
+		size_type m_depth{};
+
+		// -- non-modifiers ------------------------------------------------------
+	public:
+		[[nodiscard]] size_type  depth()                  const noexcept;
+		[[nodiscard]] DepthMixin first()                  const noexcept;
+		[[nodiscard]] DepthMixin last()                   const noexcept;
+		[[nodiscard]] DepthMixin parent()                 const noexcept;
+		[[nodiscard]] DepthMixin leftmost_deepest()       const noexcept;
+		[[nodiscard]] DepthMixin rightmost_deepest()      const noexcept;
+		[[nodiscard]] DepthMixin next()                   const noexcept;
+		[[nodiscard]] DepthMixin prev()                   const noexcept;
+		[[nodiscard]] DepthMixin end()                    const noexcept;
+
+		// -- lifecycle ----------------------------------------------------------
+	public:
+		using base_type::base_type;
+		DepthMixin(base_type, size_type = {})                   noexcept;
+
+	};  // class DepthMixin<TNodeRef, std::true_type>
+
+
+
+	/// -- non-modifiers ------------------------------------------------------
+
+	// depth
+	template <typename T>
+	auto DepthMixin<T, std::true_type>::depth() const noexcept -> size_type
+	{
+		assert(m_depth > 0);
+		return m_depth;
+	}
+
+	// first child
+	template <typename T>
+	auto DepthMixin<T, std::true_type>::first() const noexcept -> DepthMixin
+	{
+		return { base_type::first(), m_depth + 1 };
+	}
+
+	// last child
+	template <typename T>
+	auto DepthMixin<T, std::true_type>::last() const noexcept -> DepthMixin
+	{
+		return { base_type::last(), m_depth + 1 };
+	}
+
+	// parent
+	template <typename T>
+	auto DepthMixin<T, std::true_type>::parent() const noexcept -> DepthMixin
+	{
+		return { base_type::parent(), m_depth - 1 };
+	}
+
+	// leftmost deepest child
+	template <typename T>
+	auto DepthMixin<T, std::true_type>::leftmost_deepest() const noexcept -> DepthMixin
+	{
+		DepthMixin cur = *this;
+		while (cur.has_children()) {
+			cur = cur.first();
+		}
+		return cur;
+	}
+
+	// rightmost deepest child
+	template <typename T>
+	auto DepthMixin<T, std::true_type>::rightmost_deepest() const noexcept -> DepthMixin
+	{
+		DepthMixin cur = *this;
+		while (cur.has_children()) {
+			cur = cur.last();
+		}
+		return cur;
+	}
+
+	// next sibling
+	template <typename T>
+	auto DepthMixin<T, std::true_type>::next() const noexcept -> DepthMixin
+	{
+		return { base_type::next(), m_depth };
+	}
+
+	// previous sibling
+	template <typename T>
+	auto DepthMixin<T, std::true_type>::prev() const noexcept -> DepthMixin
+	{
+		return { base_type::prev(), m_depth };
+	}
+
+	// end
+	template <typename T>
+	auto DepthMixin<T, std::true_type>::end() const noexcept -> DepthMixin
+	{
+		return { base_type::end(), m_depth + 1 };
+	}
+
+
+	/// -- lifecycle ----------------------------------------------------------
+
+	// construct from base and depth
+	template <typename T>
+	DepthMixin<T, std::true_type>::DepthMixin(base_type base, size_type depth) noexcept :
+		base_type(base),
+		m_depth(depth)
+	{}
+
+
+}  // namespace cst::detail::IntrusiveForest
+
+
+
+/// DepthMixin<T, std::false_type>
+namespace cst::detail::IntrusiveForest
+{
+
+	// =======================================================================
+	//  DepthMixin<T, std::false_type> - dummy implementation
+	// =======================================================================
+	template <typename TNodeRef>
+    class DepthMixin<TNodeRef, std::false_type> :
 		public TNodeRef
     {
-    public:
-        using typename TNodeRef::size_type;
-        using TNodeRef::TNodeRef;
+		// -- type aliases -------------------------------------------------------
+	public:
+		using base_type  = TNodeRef;
+		using typename base_type::size_type;
 
-    private:
-        size_type m_depth{};
+		// -- non-modifiers ------------------------------------------------------
+	public:
+		[[nodiscard]] size_type  depth()                  const noexcept;
+		[[nodiscard]] DepthMixin first()                  const noexcept;
+		[[nodiscard]] DepthMixin last()                   const noexcept;
 
-    public:
-        DepthFieldMixin(TNodeRef base, size_type depth = {}) noexcept :
-            TNodeRef(base),
-            m_depth(depth)
-        {}
+ 		// -- lifecycle ----------------------------------------------------------
+	public:
+        using base_type::base_type;
+		DepthMixin(base_type, [[maybe_unused]] size_type = {}) noexcept;
 
-        [[nodiscard]] size_type depth() const noexcept
-        {
-			assert(m_depth > 0);
-            return m_depth - 1;
-        }
-
-        [[nodiscard]] DepthFieldMixin first() const noexcept
-        {
-            return { TNodeRef::first(), m_depth + 1 };
-        }
-
-        [[nodiscard]] DepthFieldMixin last() const noexcept
-        {
-            return { TNodeRef::last(), m_depth + 1 };
-        }
-
-        [[nodiscard]] DepthFieldMixin parent() const noexcept
-        {
-            return { TNodeRef::parent(), m_depth - 1 };
-        }
-
-        [[nodiscard]] DepthFieldMixin leftmost_deepest() const noexcept
-        {
-            DepthFieldMixin cur = *this;
-            while (cur.has_children()) {
-                cur = cur.first();
-            }
-            return cur;
-        }
-
-        [[nodiscard]] DepthFieldMixin rightmost_deepest() const noexcept
-        {
-            DepthFieldMixin cur = *this;
-            while (cur.has_children()) {
-                cur = cur.last();
-            }
-            return cur;
-        }
-
-        [[nodiscard]] DepthFieldMixin next() const noexcept
-        {
-            return { TNodeRef::next(), m_depth };
-        }
-
-        [[nodiscard]] DepthFieldMixin prev() const noexcept
-        {
-            return { TNodeRef::prev(), m_depth };
-        }
-
-        [[nodiscard]] DepthFieldMixin end() const noexcept
-        {
-            return { TNodeRef::end(), m_depth };
-        }
-
-    };  // class DepthFieldMixin<TNodeRef, std::true_type>
+   };  // class DepthMixin<TNodeRef, std::false_type>
 
 
 
-	// =======================================================================
-	//  DepthFieldMixin<T, std::false_type> - dummy implementation
-	// =======================================================================
-	template <typename TNodeRef>
-    class DepthFieldMixin<TNodeRef, std::false_type> : public TNodeRef
-    {
-    public:
-        using typename TNodeRef::size_type;
-        using TNodeRef::TNodeRef;
+	/// -- non-modifiers ------------------------------------------------------
 
-		DepthFieldMixin(TNodeRef base, size_type = {}) noexcept :
-			TNodeRef(base)
-		{}
+	// current depth of node
+	template <typename T>
+	auto DepthMixin<T, std::false_type>::depth() const noexcept -> size_type
+	{
+		return 0;
+	}
 
-		[[nodiscard]] size_type depth() const noexcept
-        {
-            return TNodeRef::count_depth() - 1;
-        }
+	// first child
+	template <typename T>
+	auto DepthMixin<T, std::false_type>::first() const noexcept -> DepthMixin
+	{
+		return base_type::first();
+	}
 
-    };  // class DepthFieldMixin<TNodeRef, std::false_type>
+	// last child
+	template <typename T>
+	auto DepthMixin<T, std::false_type>::last() const noexcept -> DepthMixin
+	{
+		return base_type::last();
+	}
+
+
+	/// -- lifecycle ----------------------------------------------------------
+
+	// construct from base
+	template <typename T>
+	DepthMixin<T, std::false_type>::DepthMixin(base_type base, size_type) noexcept :
+		base_type(base)
+	{}
 
 
 }  // namespace cst::detail::IntrusiveForest

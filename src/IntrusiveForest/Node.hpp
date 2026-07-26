@@ -20,14 +20,15 @@ namespace cst::detail::IntrusiveForest
 	{
 		// -- forward declarations -----------------------------------------------
 	private:
-		struct EmptyField;
+		template <typename T
+		> struct Dummy;
 		struct SizeField;
 		struct ChildCountField;
 
 		// -- internal type aliases ----------------------------------------------
 	private:
-		using SizeBase        = std::conditional_t<TTraits::size_tag::value, SizeField, EmptyField>;
-		using ChildCountBase  = std::conditional_t<TTraits::child_count_tag::value, ChildCountField, EmptyField>;
+		using SizeBase        = std::conditional_t<TTraits::size_tag        ::value, SizeField,       Dummy<SizeField>>;
+		using ChildCountBase  = std::conditional_t<TTraits::child_count_tag ::value, ChildCountField, Dummy<ChildCountField>>;
 
 		// -- nested classes -----------------------------------------------------
 	private:
@@ -46,15 +47,16 @@ namespace cst::detail::IntrusiveForest
 
 
 
-/// struct Node::EmptyField
+/// struct Node::Dummy
 namespace cst::detail::IntrusiveForest
 {
 
 	// =======================================================================
-	//  EmptyField - dummy structure
+	//  Dummy - dummy structure
 	// =======================================================================
 	template <typename TTraits>
-	struct Node<TTraits>::EmptyField
+	template <typename T>
+	struct Node<TTraits>::Dummy
 	{};
 
 }  // namespace cst::detail::IntrusiveForest

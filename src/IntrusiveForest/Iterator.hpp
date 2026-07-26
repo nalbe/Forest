@@ -22,7 +22,7 @@ namespace cst::detail::IntrusiveForest
 	{
 		// -- friend declaration -------------------------------------------------
 	private:
-		friend class IteratorVerifier<TContainer, Iterator>;
+		template <typename, typename>       friend class IteratorVerifier;
 		template <typename, typename, bool> friend class Iterator;
 		friend class TContainer::self_type;
 
@@ -66,64 +66,84 @@ namespace cst::detail::IntrusiveForest
 
 		// -- data member --------------------------------------------------------
 	private:
-		using node_ref_mixin          = DepthFieldMixin<typename container_type::node_ref, depth_tag>;
+		using node_ref_mixin          = DepthMixin<typename container_type::node_ref, depth_tag>;
 		node_ref_mixin m_ref;
 
 		// -- private methods ----------------------------------------------------
 	private:
-		auto _base()                                         const noexcept;
+		auto _base()                                             const noexcept;
 											  
 		// -- public operators ---------------------------------------------------
 	public:									  
-		self_type& operator --()                                   noexcept;
-		self_type& operator ++()                                   noexcept;
-		self_type  operator --(int)                                noexcept;
-		self_type  operator ++(int)                                noexcept;
-		self_type& operator -=(size_type)                          noexcept;
-		self_type& operator +=(size_type)                          noexcept;
-		reference  operator *()                              const noexcept;
-		pointer    operator ->()                             const noexcept;
+		self_type& operator --()                                       noexcept;
+		self_type& operator ++()                                       noexcept;
+		self_type  operator --(int)                                    noexcept;
+		self_type  operator ++(int)                                    noexcept;
+		self_type& operator -=(size_type)                              noexcept;
+		self_type& operator +=(size_type)                              noexcept;
+		reference  operator *()                                  const noexcept;
+		pointer    operator ->()                                 const noexcept;
 
 		// -- traversal ----------------------------------------------------------
 	public:
-		self_type parent()                                   const noexcept;
-		self_type prev_sibling()                             const noexcept;
-		self_type next_sibling()                             const noexcept;
-		self_type prev_preorder()                            const noexcept;
-		self_type next_preorder()                            const noexcept;
-		self_type prev_postorder()                           const noexcept;
-		self_type next_postorder()                           const noexcept;
+		self_type begin()                                        const noexcept;
+		self_type end()                                          const noexcept;
+		self_type parent()                                       const noexcept;
+		self_type first()                                        const noexcept;
+		self_type last()                                         const noexcept;
+		self_type prev_sibling()                                 const noexcept;
+		self_type next_sibling()                                 const noexcept;
+		self_type prev_preorder()                                const noexcept;
+		self_type next_preorder()                                const noexcept;
+		self_type prev_postorder()                               const noexcept;
+		self_type next_postorder()                               const noexcept;
 
 		// -- basic accessors ----------------------------------------------------
 	public:
-		bool has_children()                                  const noexcept;
-		reference data()                                     const noexcept;
+		bool has_children()                                      const noexcept;
+		reference data()                                         const noexcept;
 
 		// -- traits-dependent methods -------------------------------------------
 	public:
-		size_type size()                                     const noexcept;
-		size_type child_count()                              const noexcept;
-		size_type depth()                                    const noexcept;
+		size_type size()                                         const noexcept;
+		size_type child_count()                                  const noexcept;
+		size_type depth()                                        const noexcept;
 
 		// -- private constructors -----------------------------------------------
 	private:
 		template <bool C = B, std::enable_if_t<!C, bool> = 0
-		> explicit Iterator(const const_iterator&)                 noexcept;
-		explicit Iterator(node_ref_mixin, const container_type*)   noexcept;
+		> explicit Iterator(const const_iterator&)                     noexcept;
+		explicit Iterator(node_ref_mixin, const container_type*)       noexcept;
 
 		// -- public constructors ------------------------------------------------
 	public:
-		Iterator(std::nullptr_t = nullptr)                         noexcept;
-		Iterator(const self_type&)                                 noexcept;
-		Iterator(self_type&&)                                      noexcept;
+		Iterator(std::nullptr_t = nullptr)                             noexcept;
+		Iterator(const self_type&)                                     noexcept;
+		Iterator(self_type&&)                                          noexcept;
+		template <typename U, bool C,
+			typename = std::enable_if_t<!C || B>,
+			typename = std::enable_if_t<!std::is_same<Iterator, Iterator<container_type, U, C>>::value>
+		> Iterator(const Iterator<container_type, U, C>&)              noexcept;
+		template <typename U, bool C,
+			typename = std::enable_if_t<!C || B>,
+			typename = std::enable_if_t<!std::is_same<Iterator, Iterator<container_type, U, C>>::value>
+		> Iterator(Iterator<container_type, U, C>&&)                   noexcept;
 
 		// -- public operators ---------------------------------------------------
 	public:
-		self_type& operator=(std::nullptr_t)                       noexcept;
-		self_type& operator=(const self_type&)                     noexcept;
-		self_type& operator=(self_type&&)                          noexcept;
+		self_type& operator=(std::nullptr_t)                           noexcept;
+		self_type& operator=(const self_type&)                         noexcept;
+		self_type& operator=(self_type&&)                              noexcept;
 		template <bool C = B, typename = std::enable_if_t<!C>
-		> operator const_iterator()                                noexcept;
+		> operator const_iterator()                                    noexcept;
+		template <typename U, bool C,
+			typename = std::enable_if_t<!C || B>,
+			typename = std::enable_if_t<!std::is_same<Iterator, Iterator<container_type, U, C>>::value>
+		> self_type& operator=(const Iterator<container_type, U, C>&)  noexcept;
+		template <typename U, bool C,
+			typename = std::enable_if_t<!C || B>,
+			typename = std::enable_if_t<!std::is_same<Iterator, Iterator<container_type, U, C>>::value>
+		> self_type& operator=(Iterator<container_type, U, C>&&)       noexcept;
 
 		// -- free operators -----------------------------------------------------
 	public:
@@ -138,12 +158,7 @@ namespace cst::detail::IntrusiveForest
 
 	};  // class Iterator
 
-}  // namespace cst::detail::IntrusiveForest
 
-
-
-namespace cst::detail::IntrusiveForest
-{
 
 	/// -- private methods ----------------------------------------------------
 
@@ -228,7 +243,27 @@ namespace cst::detail::IntrusiveForest
 
 	/// -- traversal ----------------------------------------------------------
 
-	// returns iterator to the parent node
+	// iterator to the begin node of subtree
+	template <typename T, typename U, bool B>
+	auto Iterator<T, U, B>::begin() const noexcept -> self_type
+	{
+		verifier_type::_check_conditions(
+			m_ref.is_real()
+		);
+		return self_type{ U::begin(m_ref), verifier_type::_get_container() };
+	}
+
+	// iterator to the end sentinel of subtree
+	template <typename T, typename U, bool B>
+	auto Iterator<T, U, B>::end() const noexcept -> self_type
+	{
+		verifier_type::_check_conditions(
+			m_ref.is_real()
+		);
+		return self_type{ U::end(m_ref), verifier_type::_get_container() };
+	}
+
+	// iterator to the parent node
 	template <typename T, typename U, bool B>
 	auto Iterator<T, U, B>::parent() const noexcept -> self_type
 	{
@@ -236,10 +271,30 @@ namespace cst::detail::IntrusiveForest
 			m_ref.is_real(),
 			!m_ref.parent().is_root()
 		);
-		return U::parent(m_ref);
+		return self_type{ U::parent(m_ref), verifier_type::_get_container() };
 	}
 
-	// returns iterator to the previous sibling node
+	// iterator to the first child node
+	template <typename T, typename U, bool B>
+	auto Iterator<T, U, B>::first() const noexcept -> self_type
+	{
+		verifier_type::_check_conditions(
+			m_ref.is_real()
+		);
+		return self_type{ m_ref.first(), verifier_type::_get_container() };
+	}
+
+	// iterator to the last child node
+	template <typename T, typename U, bool B>
+	auto Iterator<T, U, B>::last() const noexcept -> self_type
+	{
+		verifier_type::_check_conditions(
+			m_ref.is_real()
+		);
+		return self_type{ m_ref.last(), verifier_type::_get_container() };
+	}
+
+	// iterator to the previous sibling node
 	template <typename T, typename U, bool B>
 	auto Iterator<T, U, B>::prev_sibling() const noexcept -> self_type
 	{
@@ -247,20 +302,20 @@ namespace cst::detail::IntrusiveForest
 			!m_ref.is_begin(),
 			!m_ref.is_rend()
 		);
-		return m_ref.children().prev();
+		return self_type{ children_t::prev(m_ref), verifier_type::_get_container() };
 	}
 
-	// returns iterator to the next sibling node
+	// iterator to the next sibling node
 	template <typename T, typename U, bool B>
 	auto Iterator<T, U, B>::next_sibling() const noexcept -> self_type
 	{
 		verifier_type::_check_conditions(
 			m_ref.is_real()
 		);
-		return m_ref.children().next();
+		return self_type{ children_t::next(m_ref), verifier_type::_get_container() };
 	}
 
-	// returns iterator to the previous node in pre-order traversal
+	// iterator to the previous node in pre-order traversal
 	template <typename T, typename U, bool B>
 	auto Iterator<T, U, B>::prev_preorder() const noexcept -> self_type
 	{
@@ -268,38 +323,37 @@ namespace cst::detail::IntrusiveForest
 			!(m_ref.is_first() and m_ref.parent().is_root()),
 			!m_ref.is_rend()
 		);
-		return m_ref.preorder().prev();
+		return self_type{ preorder_t::prev(m_ref), verifier_type::_get_container() };
 	}
 
-	// returns iterator to the next node in pre-order traversal
+	// iterator to the next node in pre-order traversal
 	template <typename T, typename U, bool B>
 	auto Iterator<T, U, B>::next_preorder() const noexcept -> self_type
 	{
 		verifier_type::_check_conditions(
 			m_ref.is_real()
 		);
-		return m_ref.preorder().next();
+		return self_type{ preorder_t::next(m_ref), verifier_type::_get_container() };
 	}
 
-	// returns iterator to the previous node in post-order traversal
+	// iterator to the previous node in post-order traversal
 	template <typename T, typename U, bool B>
 	auto Iterator<T, U, B>::prev_postorder() const noexcept -> self_type
 	{
-//		verifier_type::_check_conditions(
-//			!(m_ref.is_first() and m_ref.parent().is_root()),
-//			!m_ref.is_rend()
-//		);
-		return m_ref.postorder().prev();
+		verifier_type::_check_conditions(
+			m_ref.valid()
+		);
+		return self_type{ postorder_t::prev(m_ref), verifier_type::_get_container() };
 	}
 
-	// returns iterator to the next node in post-order traversal
+	// iterator to the next node in post-order traversal
 	template <typename T, typename U, bool B>
 	auto Iterator<T, U, B>::next_postorder() const noexcept -> self_type
 	{
-//		verifier_type::_check_conditions(
-//			m_ref.is_real()
-//		);
-		return m_ref.postorder().next();
+		verifier_type::_check_conditions(
+			m_ref.is_real()
+		);
+		return self_type{ postorder_t::next(m_ref), verifier_type::_get_container() };
 	}
 
 
@@ -363,9 +417,14 @@ namespace cst::detail::IntrusiveForest
 	auto Iterator<T, U, B>::depth() const noexcept -> size_type
 	{
 		verifier_type::_check_conditions(
-			m_ref.is_real()
+			m_ref.valid()
 		);
-		return m_ref.depth();
+		if constexpr (depth_tag::value) {
+			return m_ref.depth() - 1;
+		}
+		else {
+			return m_ref.count_depth() - 1;
+		}
 	}
 
 
@@ -412,6 +471,22 @@ namespace cst::detail::IntrusiveForest
 		m_ref(std::exchange(other.m_ref, nullptr))
 	{}
 
+	// copy-construction from another iterator
+	template <typename T, typename U, bool B>
+	template <typename V, bool C, typename, typename>
+	Iterator<T, U, B>::Iterator(const Iterator<container_type, V, C>& other) noexcept :
+		verifier_type(other),
+		m_ref(other.m_ref)
+	{}
+
+	// move-construction from another iterator
+	template <typename T, typename U, bool B>
+	template <typename V, bool C, typename, typename>
+	Iterator<T, U, B>::Iterator(Iterator<container_type, V, C>&& other) noexcept :
+		verifier_type(other),
+		m_ref(std::exchange(other.m_ref, nullptr))
+	{}
+
 
 	/// -- public operators ---------------------------------------------------
 
@@ -419,17 +494,16 @@ namespace cst::detail::IntrusiveForest
 	template <typename T, typename U, bool B>
 	auto Iterator<T, U, B>::operator=(nullptr_t) noexcept -> self_type&
 	{
-		verifier_type::operator=();
+		verifier_type::_register_container(nullptr);
 		m_ref = nullptr;
 		return *this;
 	}
-
 
 	// non-const self -> non-const self (assign)
 	template <typename T, typename U, bool B>
 	auto Iterator<T, U, B>::operator=(const self_type& other) noexcept -> self_type&
 	{
-		verifier_type::operator=(other);
+		verifier_type::_register_container(other._get_container());
 		m_ref = other.m_ref;
 		return *this;
 	}
@@ -438,18 +512,37 @@ namespace cst::detail::IntrusiveForest
 	template <typename T, typename U, bool B>
 	auto Iterator<T, U, B>::operator=(self_type&& other) noexcept -> self_type&
 	{
-		verifier_type::operator=(other);
+		verifier_type::_register_container(other._get_container());
 		m_ref = other.m_ref;
 		return *this;
 	}
-
 
 	// non-const self -> const self (conversion)
 	template <typename T, typename U, bool B>
 	template <bool C, typename>
 	Iterator<T, U, B>::operator const_iterator() noexcept
 	{
-		return const_iterator{ m_ref };
+		return const_iterator{ m_ref, verifier_type::_get_container() };
+	}
+
+	// copy-assignment from another iterator
+	template <typename T, typename U, bool B>
+	template <typename V, bool C, typename, typename>
+	Iterator<T, U, B>& Iterator<T, U, B>::operator=(const Iterator<container_type, V, C>& other) noexcept
+	{
+		verifier_type::_register_container(other._get_container());
+		m_ref = other.m_ref;
+		return *this;
+	}
+
+	// move-assignment from another iterator
+	template <typename T, typename U, bool B>
+	template <typename V, bool C, typename, typename>
+	Iterator<T, U, B>& Iterator<T, U, B>::operator=(Iterator<container_type, V, C>&& other) noexcept
+	{
+		verifier_type::_register_container(other._get_container());
+		m_ref = std::exchange(other.m_ref, nullptr);
+		return *this;
 	}
 
 
